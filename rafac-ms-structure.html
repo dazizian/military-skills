@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAFAC Military Skills — Command &amp; Advisory Structure</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    min-height: 100vh;
+    background: linear-gradient(150deg, #04090f 0%, #081420 60%, #040c14 100%);
+    font-family: 'DM Sans', 'Segoe UI', sans-serif;
+    padding: 20px 12px 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  #title-block { text-align: center; margin-bottom: 12px; }
+  #title-super { font-size: 10px; letter-spacing: 0.22em; color: #3a6080; text-transform: uppercase; font-weight: 700; margin-bottom: 3px; }
+  #title-main  { font-size: 19px; font-weight: 800; color: #d8eeff; letter-spacing: 0.02em; }
+  #title-sub   { margin-top: 4px; font-size: 11px; color: #3a6080; }
+  #legend-edges, #legend-types {
+    display: flex; flex-wrap: wrap; gap: 6px 16px;
+    justify-content: center;
+  }
+  #legend-edges { margin-bottom: 7px; }
+  #legend-types { margin-bottom: 12px; }
+  .leg-item { display: flex; align-items: center; gap: 6px; }
+  .leg-item span { font-size: 10px; color: #6a9cc0; font-weight: 500; }
+  .leg-badge { width: 12px; height: 12px; border-radius: 3px; }
+  #diagram-wrap {
+    background: #060e18;
+    border: 1px solid #0f2030;
+    border-radius: 12px;
+    overflow: hidden;
+    width: 100%;
+    max-width: 1020px;
+    box-shadow: 0 12px 50px #00000099;
+  }
+  svg { width: 100%; display: block; }
+  .node-g { cursor: pointer; }
+  #notes {
+    margin-top: 11px;
+    background: #060e18;
+    border: 1px solid #0e2030;
+    border-radius: 8px;
+    padding: 9px 14px;
+    max-width: 1020px;
+    width: 100%;
+    font-size: 10.5px;
+    color: #4a7898;
+    line-height: 1.85;
+  }
+  #notes .lbl { color: #7aaac8; font-weight: 700; }
+  #notes strong { color: #6aaac8; }
+  #attribution { margin-top: 9px; font-size: 10px; color: #2a4a62; text-align: center; }
+  #footer      { margin-top: 4px;  font-size: 10px; color: #182838; text-align: center; }
+</style>
+</head>
+<body>
+
+<div id="title-block">
+  <div id="title-super">Royal Air Force Air Cadets</div>
+  <div id="title-main">Military Skills — Command &amp; Advisory Structure</div>
+  <div id="title-sub">Tap / click a node to highlight its connections · Click again to release</div>
+</div>
+
+<div id="legend-edges"></div>
+<div id="legend-types"></div>
+<div id="diagram-wrap"><svg id="diagram"></svg></div>
+
+<div id="notes">
+  <span class="lbl">Notes — </span>
+  <strong>DDH</strong> is always the RC. &nbsp;|&nbsp;
+  <strong>Ex Dir</strong>: RC or SSO (regional activities); OC Wg (wing activities). &nbsp;|&nbsp;
+  <strong>SPO</strong>: any SQEP — often the Rgnl ShO or Wg ShO. &nbsp;|&nbsp;
+  <strong>PO</strong>: any SQEP.
+</div>
+<div id="attribution">Created by the Shooting National Head, Wg Cdr Dan Azizian</div>
+<div id="footer">RAFAC Military Skills · Command &amp; Advisory Organogram</div>
+
+<script>
+// ── Data ──────────────────────────────────────────────────────────────────────
+const NW = 144, NH = 72;
+function nc(x, y) { return { x, y, cx: x + NW/2, cy: y + NH/2 }; }
+const R = [20, 155, 290, 425, 560];
+
+const NODES = {
+  RC:      { id:'RC',      label:'RC',       sub:'Regional Commandant',       type:'org',      ...nc(50,  R[0]) },
+  SNH:     { id:'SNH',     label:'SNH',      sub:'Shooting National Head',    type:'org',      ...nc(310, R[0]) },
+  SSO:     { id:'SSO',     label:'SSO',      sub:'Senior Staff Officer',      type:'org',      ...nc(50,  R[1]) },
+  RgnlShO: { id:'RgnlShO', label:'Rgnl ShO', sub:'Regional Shooting Officer', type:'org',      ...nc(20,  R[2]) },
+  TSA:     { id:'TSA',     label:'TSA',      sub:'Training Safety Advisor',   type:'org',      ...nc(200, R[2]) },
+  OCWg:    { id:'OCWg',    label:'OC Wg',    sub:'Officer Commanding Wing',   type:'org',      ...nc(400, R[2]) },
+  WgShO:   { id:'WgShO',   label:'Wg ShO',   sub:'Wing Shooting Officer',     type:'org',      ...nc(400, R[3]) },
+  DDH:     { id:'DDH',     label:'DDH',      sub:'Delivery Duty Holder',      type:'planning', ...nc(710, R[0]) },
+  ExDir:   { id:'ExDir',   label:'Ex Dir',   sub:'Exercise Director',         type:'planning', ...nc(710, R[2]) },
+  SPO:     { id:'SPO',     label:'SPO',      sub:'Senior Planning Officer',   type:'planning', ...nc(710, R[3]) },
+  PO:      { id:'PO',      label:'PO',       sub:'Planning Officer',          type:'planning', ...nc(710, R[4]) },
+};
+
+const EDGES = [
+  { from:'RC',      to:'SSO',     type:'commands' },
+  { from:'RC',      to:'TSA',     type:'commands' },
+  { from:'SSO',     to:'RgnlShO', type:'commands' },
+  { from:'SSO',     to:'OCWg',    type:'commands' },
+  { from:'OCWg',    to:'WgShO',   type:'commands' },
+  { from:'SNH',     to:'RC',      type:'policy'   },
+  { from:'SNH',     to:'RgnlShO', type:'policy'   },
+  { from:'SNH',     to:'TSA',     type:'policy'   },
+  { from:'RgnlShO', to:'RC',      type:'policy'   },
+  { from:'RgnlShO', to:'OCWg',    type:'policy'   },
+  { from:'RgnlShO', to:'WgShO',   type:'policy'   },
+  { from:'TSA',     to:'RC',      type:'policy'   },
+  { from:'TSA',     to:'OCWg',    type:'policy'   },
+  { from:'TSA',     to:'WgShO',   type:'policy'   },
+  { from:'WgShO',   to:'OCWg',    type:'policy'   },
+  { from:'DDH',     to:'ExDir',   type:'appoints' },
+  { from:'ExDir',   to:'SPO',     type:'appoints' },
+  { from:'SPO',     to:'PO',      type:'appoints' },
+  { from:'TSA',     to:'DDH',     type:'plan_adv' },
+  { from:'TSA',     to:'ExDir',   type:'plan_adv' },
+  { from:'TSA',     to:'SPO',     type:'plan_adv' },
+  { from:'TSA',     to:'PO',      type:'plan_adv' },
+  { from:'SPO',     to:'DDH',     type:'plan_adv' },
+  { from:'SPO',     to:'ExDir',   type:'plan_adv' },
+  { from:'SPO',     to:'PO',      type:'plan_adv' },
+];
+
+const C = {
+  org:      { bg:'#0d2618', border:'#2ecc71', text:'#e8fdf0' },
+  planning: { bg:'#0d1e38', border:'#3498db', text:'#e8f4fd' },
+  commands: { stroke:'#2ecc71', sw:2.8, dash:null  },
+  appoints: { stroke:'#3498db', sw:2.5, dash:null  },
+  policy:   { stroke:'#e67e22', sw:1.8, dash:'8,4' },
+  plan_adv: { stroke:'#9b59b6', sw:1.8, dash:'3,5' },
+};
+
+const LEGEND_EDGES = [
+  { key:'commands', label:'Commands / manages'         },
+  { key:'appoints', label:'Appoints'                   },
+  { key:'policy',   label:'Advises (general policy)'   },
+  { key:'plan_adv', label:'Advises (planning process)' },
+];
+const LEGEND_TYPES = [
+  { label:'Organisational role',  color:'#2ecc71' },
+  { label:'Planning appointment', color:'#3498db' },
+];
+
+// ── Build render edges (deduplicated) ────────────────────────────────────────
+function buildRenderEdges() {
+  const map = {};
+  EDGES.forEach(e => {
+    const k = e.from + '||' + e.to;
+    if (!map[k]) map[k] = { from:e.from, to:e.to, types:[] };
+    if (!map[k].types.includes(e.type)) map[k].types.push(e.type);
+  });
+  return Object.values(map);
+}
+const RENDER_EDGES = buildRenderEdges();
+
+// ── Geometry ─────────────────────────────────────────────────────────────────
+function rectIntersect(cx1, cy1, cx2, cy2, hw, hh) {
+  const dx = cx2-cx1, dy = cy2-cy1;
+  if (dx===0 && dy===0) return {x:cx2, y:cy2};
+  const tests = [];
+  if (dx!==0) { tests.push((cx2-hw-cx1)/dx); tests.push((cx2+hw-cx1)/dx); }
+  if (dy!==0) { tests.push((cy2-hh-cy1)/dy); tests.push((cy2+hh-cy1)/dy); }
+  const t = Math.max(...tests.filter(t => t>0 && t<=1.001));
+  return { x:cx1+dx*t, y:cy1+dy*t };
+}
+
+function makeEdge(n1, n2, offset) {
+  const hw=NW/2+2, hh=NH/2+2;
+  const start = rectIntersect(n2.cx, n2.cy, n1.cx, n1.cy, hw, hh);
+  const end   = rectIntersect(n1.cx, n1.cy, n2.cx, n2.cy, hw, hh);
+  const dx=end.x-start.x, dy=end.y-start.y;
+  const len=Math.sqrt(dx*dx+dy*dy)||1;
+  const ux=dx/len, uy=dy/len;
+  const ox=-uy*offset, oy=ux*offset;
+  const sx=start.x+ox, sy=start.y+oy;
+  const ex=end.x+ox,   ey=end.y+oy;
+  const mx=(sx+ex)/2,  my=(sy+ey)/2;
+  const cpx=mx-uy*24,  cpy=my+ux*24;
+  const AH_LEN=14, AH_HALF=6;
+  const tax=ex-cpx, tay=ey-cpy;
+  const tlen=Math.sqrt(tax*tax+tay*tay)||1;
+  const tux=tax/tlen, tuy=tay/tlen;
+  const pathEx=ex-tux*AH_LEN, pathEy=ey-tuy*AH_LEN;
+  const pathD=`M ${sx} ${sy} Q ${cpx} ${cpy} ${pathEx} ${pathEy}`;
+  const blx=pathEx-tuy*AH_HALF, bly=pathEy+tux*AH_HALF;
+  const brx=pathEx+tuy*AH_HALF, bry=pathEy-tux*AH_HALF;
+  const arrowPts=`${ex},${ey} ${blx},${bly} ${brx},${bry}`;
+  return { pathD, arrowPts };
+}
+
+// ── SVG helpers ───────────────────────────────────────────────────────────────
+const SVG_NS = 'http://www.w3.org/2000/svg';
+function svgEl(tag, attrs) {
+  const el = document.createElementNS(SVG_NS, tag);
+  for (const [k,v] of Object.entries(attrs)) {
+    if (v !== null && v !== undefined) el.setAttribute(k, v);
+  }
+  return el;
+}
+
+// ── State ────────────────────────────────────────────────────────────────────
+let hover  = null;
+let pinned = null;
+
+function getActive() { return pinned || hover; }
+
+// References to edge groups and node groups for opacity updates
+const edgeGroupEls = []; // { el, fromId, toId }
+const nodeGroupEls = {}; // id -> { g, rectEl }
+
+function updateOpacities() {
+  const active = getActive();
+  // Edges
+  edgeGroupEls.forEach(({el, fromId, toId}) => {
+    const lit = !active || fromId===active || toId===active;
+    el.style.opacity = lit ? '1' : '0.08';
+  });
+  // Nodes
+  Object.entries(nodeGroupEls).forEach(([id, {dimEls}]) => {
+    const dim = active && id!==active &&
+      !RENDER_EDGES.some(e=>(e.from===active&&e.to===id)||(e.to===active&&e.from===id));
+    dimEls.forEach(el => { el.style.opacity = dim ? (el._dimVal||'0.15') : el._litVal; });
+  });
+}
+
+// ── Build legend ──────────────────────────────────────────────────────────────
+const legEdgesEl = document.getElementById('legend-edges');
+LEGEND_EDGES.forEach(l => {
+  const cfg = C[l.key];
+  const div = document.createElement('div');
+  div.className = 'leg-item';
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('width','42'); svg.setAttribute('height','14');
+  svg.style.overflow='visible';
+  const line = svgEl('line',{x1:'2',y1:'7',x2:'28',y2:'7',stroke:cfg.stroke,'stroke-width':'2.5','stroke-dasharray':cfg.dash||null});
+  const poly = svgEl('polygon',{points:'42,7 28,2 28,12',fill:cfg.stroke});
+  svg.appendChild(line); svg.appendChild(poly);
+  const span = document.createElement('span');
+  span.textContent = l.label;
+  div.appendChild(svg); div.appendChild(span);
+  legEdgesEl.appendChild(div);
+});
+
+const legTypesEl = document.getElementById('legend-types');
+LEGEND_TYPES.forEach(l => {
+  const div = document.createElement('div');
+  div.className = 'leg-item';
+  const badge = document.createElement('div');
+  badge.className = 'leg-badge';
+  badge.style.cssText = `background:${l.color}22;border:2px solid ${l.color}`;
+  const span = document.createElement('span');
+  span.textContent = l.label;
+  div.appendChild(badge); div.appendChild(span);
+  legTypesEl.appendChild(div);
+});
+
+// ── Build SVG diagram ─────────────────────────────────────────────────────────
+const VH = R[4] + NH + 24;
+const svgEl2 = document.getElementById('diagram');
+svgEl2.setAttribute('viewBox', `0 0 990 ${VH}`);
+
+// Defs (glow filter only — no markers needed)
+const defs = svgEl('defs', {});
+const filter = svgEl('filter', {id:'glow', x:'-40%', y:'-40%', width:'180%', height:'180%'});
+const blur = svgEl('feGaussianBlur', {stdDeviation:'4', result:'b'});
+const merge = svgEl('feMerge', {});
+const mn1 = svgEl('feMergeNode', {in:'b'});
+const mn2 = svgEl('feMergeNode', {in:'SourceGraphic'});
+merge.appendChild(mn1); merge.appendChild(mn2);
+filter.appendChild(blur); filter.appendChild(merge);
+defs.appendChild(filter);
+svgEl2.appendChild(defs);
+
+// Section backgrounds
+const orgBg = svgEl('rect', {x:'12',y:'8',width:'632',height:VH-16,rx:'10',fill:'#0a1e12',stroke:'#163424','stroke-width':'1.5',opacity:'0.7'});
+svgEl2.appendChild(orgBg);
+const orgLbl = svgEl('text', {x:'26',y:'24',fill:'#1e5030','font-size':'8','font-weight':'700','letter-spacing':'0.14em'});
+orgLbl.textContent = 'ORGANISATIONAL STRUCTURE';
+svgEl2.appendChild(orgLbl);
+
+const planBg = svgEl('rect', {x:'656',y:'8',width:'322',height:VH-16,rx:'10',fill:'#08132a',stroke:'#142244','stroke-width':'1.5',opacity:'0.7'});
+svgEl2.appendChild(planBg);
+const planLbl = svgEl('text', {x:'670',y:'24',fill:'#1a3460','font-size':'8','font-weight':'700','letter-spacing':'0.14em'});
+planLbl.textContent = 'PLANNING PROCESS';
+svgEl2.appendChild(planLbl);
+
+// Edges
+RENDER_EDGES.forEach((edge, i) => {
+  const fn = NODES[edge.from], tn = NODES[edge.to];
+  if (!fn || !tn) return;
+  edge.types.forEach((type, j) => {
+    const cfg = C[type];
+    const offset = edge.types.length===1 ? 0 : j===0 ? 12 : -12;
+    const { pathD, arrowPts } = makeEdge(fn, tn, offset);
+    const g = svgEl('g', {});
+    g.style.transition = 'opacity 0.2s';
+    const path = svgEl('path', {d:pathD, fill:'none', stroke:cfg.stroke, 'stroke-width':cfg.sw, 'stroke-dasharray':cfg.dash||null});
+    const poly = svgEl('polygon', {points:arrowPts, fill:cfg.stroke});
+    g.appendChild(path); g.appendChild(poly);
+    svgEl2.appendChild(g);
+    edgeGroupEls.push({ el:g, fromId:edge.from, toId:edge.to });
+  });
+});
+
+// Nodes
+Object.values(NODES).forEach(node => {
+  const col = C[node.type];
+  const g = svgEl('g', {transform:`translate(${node.x},${node.y})`});
+  g.classList.add('node-g');
+
+  const card = svgEl('rect', {x:'0',y:'0',width:NW,height:NH,rx:'7',fill:col.bg,stroke:col.border,'stroke-width':'1'});
+  card.style.transition='opacity 0.2s';
+  card._litVal='1'; card._dimVal='0.15';
+
+  const strip = svgEl('rect', {x:'0',y:'0',width:NW,height:'5',rx:'3',fill:col.border,opacity:'0.9'});
+  strip.style.transition='opacity 0.2s';
+  strip._litVal='0.9'; strip._dimVal='0.15';
+
+  const labelEl = svgEl('text', {x:NW/2,y:'32','text-anchor':'middle',fill:col.text,'font-size':'15','font-weight':'800','font-family':"'DM Sans',sans-serif"});
+  labelEl.style.transition='opacity 0.2s';
+  labelEl._litVal='1'; labelEl._dimVal='0.15';
+  labelEl.textContent = node.label;
+
+  const subEl = svgEl('text', {x:NW/2,y:'50','text-anchor':'middle',fill:col.text,'font-size':'8.2','font-family':"'DM Sans',sans-serif",opacity:'0.55'});
+  subEl.style.transition='opacity 0.2s';
+  subEl._litVal='0.55'; subEl._dimVal='0.1';
+  subEl.textContent = node.sub;
+
+  const badgeEl = svgEl('text', {x:NW/2,y:'63','text-anchor':'middle',fill:col.border,'font-size':'7','font-weight':'700','font-family':"'DM Sans',sans-serif",'letter-spacing':'0.12em',opacity:'0.65'});
+  badgeEl.style.transition='opacity 0.2s';
+  badgeEl._litVal='0.65'; badgeEl._dimVal='0.1';
+  badgeEl.textContent = node.type==='planning' ? 'PLANNING APPT' : 'ORG ROLE';
+
+  g.appendChild(card);
+  g.appendChild(strip);
+  g.appendChild(labelEl);
+  g.appendChild(subEl);
+  g.appendChild(badgeEl);
+  svgEl2.appendChild(g);
+
+  nodeGroupEls[node.id] = { g, dimEls:[card, strip, labelEl, subEl, badgeEl] };
+
+  // Events
+  g.addEventListener('mouseenter', () => { hover = node.id; updateOpacities(); });
+  g.addEventListener('mouseleave', () => { hover = null; updateOpacities(); });
+  g.addEventListener('click', () => {
+    hover = null;
+    pinned = (pinned === node.id) ? null : node.id;
+    updateOpacities();
+  });
+  // Touch support
+  g.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    hover = null;
+    pinned = (pinned === node.id) ? null : node.id;
+    updateOpacities();
+  });
+});
+</script>
+</body>
+</html>
