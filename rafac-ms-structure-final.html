@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAFAC Military Skills — Command &amp; Advisory Structure</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  min-height:100vh;
+  font-family:'DM Sans','Segoe UI',sans-serif;
+  padding:20px 12px 28px;
+  display:flex;flex-direction:column;align-items:center;
+  transition:background 0.3s;
+}
+#toggle-row{display:flex;justify-content:flex-end;width:100%;max-width:1020px;margin-bottom:8px;}
+#top-bar{text-align:center;width:100%;max-width:1020px;margin-bottom:12px;}
+#title-super{font-size:10px;letter-spacing:0.22em;text-transform:uppercase;font-weight:700;margin-bottom:3px;transition:color 0.3s;}
+#title-main{font-size:19px;font-weight:800;letter-spacing:0.02em;transition:color 0.3s;}
+#title-sub{margin-top:4px;font-size:11px;transition:color 0.3s;}
+#toggle-btn{
+  padding:6px 14px;border-radius:20px;border:1px solid;
+  font-size:11px;font-weight:600;cursor:pointer;
+  font-family:'DM Sans','Segoe UI',sans-serif;
+  transition:background 0.3s,color 0.3s,border-color 0.3s;
+  white-space:nowrap;
+}
+.legend-row{display:flex;flex-wrap:wrap;gap:6px 16px;justify-content:center;}
+#legend-edges{margin-bottom:7px;}
+#legend-types{margin-bottom:12px;}
+.leg-item{display:flex;align-items:center;gap:6px;}
+.leg-item span{font-size:10px;font-weight:500;transition:color 0.3s;}
+.leg-badge{width:12px;height:12px;border-radius:3px;}
+#diagram-wrap{
+  border-radius:12px;overflow:hidden;width:100%;max-width:1020px;
+  box-shadow:0 12px 50px #00000033;
+  border:1px solid;
+  transition:background 0.3s,border-color 0.3s;
+}
+svg{width:100%;display:block;}
+.node-g{cursor:pointer;}
+.edge,.node-g{transition:opacity 0.2s;}
+.node-card,.nc-fill-strip,.nc-text,.nc-badge{transition:fill 0.3s,stroke 0.3s;}
+#notes{
+  margin-top:11px;border-radius:8px;padding:9px 14px;max-width:1020px;width:100%;
+  font-size:10.5px;line-height:1.85;border:1px solid;
+  transition:background 0.3s,color 0.3s,border-color 0.3s;
+}
+#notes .lbl{font-weight:700;}
+#attribution{margin-top:9px;font-size:10px;text-align:center;transition:color 0.3s;}
+#footer{margin-top:4px;font-size:10px;text-align:center;transition:color 0.3s;}
+/* Section label text colour also toggled by JS */
+.sec-lbl{transition:fill 0.3s;}
+.sec-bg{transition:fill 0.3s,stroke 0.3s;}
+</style>
+</head>
+<body>
+
+<div id="toggle-row">
+  <button id="toggle-btn" onclick="toggleTheme()">☀ Light mode</button>
+</div>
+<div id="top-bar">
+  <div id="title-block">
+    <div id="title-super">Royal Air Force Air Cadets</div>
+    <div id="title-main">Military Skills — Command &amp; Advisory Structure</div>
+    <div id="title-sub">Click / tap a node to highlight its connections &middot; Click again to release</div>
+  </div>
+</div>
+
+<div id="legend-edges" class="legend-row"><div class="leg-item">
+    <svg width="42" height="14" style="overflow:visible">
+      <line x1="2" y1="7" x2="28" y2="7" stroke="#2ecc71" stroke-width="2.5"/>
+      <polygon points="42,7 28,2 28,12" fill="#2ecc71"/>
+    </svg>
+    <span>Commands / manages</span>
+  </div><div class="leg-item">
+    <svg width="42" height="14" style="overflow:visible">
+      <line x1="2" y1="7" x2="28" y2="7" stroke="#3498db" stroke-width="2.5"/>
+      <polygon points="42,7 28,2 28,12" fill="#3498db"/>
+    </svg>
+    <span>Appoints</span>
+  </div><div class="leg-item">
+    <svg width="42" height="14" style="overflow:visible">
+      <line x1="2" y1="7" x2="28" y2="7" stroke="#e67e22" stroke-width="2.5" stroke-dasharray="8,4"/>
+      <polygon points="42,7 28,2 28,12" fill="#e67e22"/>
+    </svg>
+    <span>Advises (general policy)</span>
+  </div><div class="leg-item">
+    <svg width="42" height="14" style="overflow:visible">
+      <line x1="2" y1="7" x2="28" y2="7" stroke="#9b59b6" stroke-width="2.5" stroke-dasharray="3,5"/>
+      <polygon points="42,7 28,2 28,12" fill="#9b59b6"/>
+    </svg>
+    <span>Advises (planning process)</span>
+  </div></div>
+<div id="legend-types" class="legend-row">
+  <div class="leg-item">
+    <div class="leg-badge" id="lb-org" style="border:2px solid #2ecc71;background:#2ecc7122"></div>
+    <span id="ls-org">Organisational role</span>
+  </div>
+  <div class="leg-item">
+    <div class="leg-badge" id="lb-plan" style="border:2px solid #3498db;background:#3498db22"></div>
+    <span id="ls-plan">Planning appointment</span>
+  </div>
+</div>
+
+<div id="diagram-wrap">
+<svg id="main-svg" viewBox="0 0 990 656" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+    <feGaussianBlur stdDeviation="4" result="b"/>
+    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+</defs>
+<rect id="sec-org-bg" class="sec-bg" x="12" y="8" width="632" height="640" rx="10" stroke-width="1.5" opacity="0.7"/>
+<text id="sec-org-lbl" class="sec-lbl" x="26" y="24" font-size="8" font-weight="700" letter-spacing="0.14em">ORGANISATIONAL STRUCTURE</text>
+<rect id="sec-plan-bg" class="sec-bg" x="656" y="8" width="322" height="640" rx="10" stroke-width="1.5" opacity="0.7"/>
+<text id="sec-plan-lbl" class="sec-lbl" x="670" y="24" font-size="8" font-weight="700" letter-spacing="0.14em">PLANNING PROCESS</text>
+<g class="edge" data-from="RC" data-to="SSO">
+  <path d="M 122.00 94.00 Q 98.00 123.50 113.16 142.14" fill="none" stroke="#2ecc71" stroke-width="2.8"/>
+  <polygon points="122.00,153.00 108.51,145.93 117.82,138.35" fill="#2ecc71"/>
+</g>
+<g class="edge" data-from="RC" data-to="TSA">
+  <path d="M 143.11 94.00 Q 176.02 202.66 241.66 277.48" fill="none" stroke="#2ecc71" stroke-width="2.8"/>
+  <polygon points="250.89,288.00 237.15,281.43 246.17,273.52" fill="#2ecc71"/>
+</g>
+<g class="edge" data-from="SSO" data-to="RgnlShO">
+  <path d="M 113.56 229.00 Q 83.57 253.29 94.32 275.41" fill="none" stroke="#2ecc71" stroke-width="2.8"/>
+  <polygon points="100.44,288.00 88.93,278.03 99.72,272.79" fill="#2ecc71"/>
+</g>
+<g class="edge" data-from="SSO" data-to="OCWg">
+  <path d="M 196.00 219.54 Q 288.36 280.89 384.16 295.37" fill="none" stroke="#2ecc71" stroke-width="2.8"/>
+  <polygon points="398.00,297.46 383.26,301.30 385.05,289.43" fill="#2ecc71"/>
+</g>
+<g class="edge" data-from="OCWg" data-to="WgShO">
+  <path d="M 472.00 364.00 Q 448.00 393.50 463.16 412.14" fill="none" stroke="#2ecc71" stroke-width="2.8"/>
+  <polygon points="472.00,423.00 458.51,415.93 467.82,408.35" fill="#2ecc71"/>
+</g>
+<g class="edge" data-from="SNH" data-to="RC">
+  <path d="M 308.00 56.00 Q 252.00 32.00 208.87 50.49" fill="none" stroke="#e67e22" stroke-width="1.8" stroke-dasharray="8,4"/>
+  <polygon points="196.00,56.00 206.50,44.97 211.23,56.00" fill="#e67e22"/>
+</g>
+<g class="edge" data-from="SNH" data-to="RgnlShO">
+  <path d="M 341.19 94.00 Q 220.65 173.43 141.33 276.89" fill="none" stroke="#e67e22" stroke-width="1.8" stroke-dasharray="8,4"/>
+  <polygon points="132.81,288.00 136.57,273.24 146.09,280.54" fill="#e67e22"/>
+</g>
+<g class="edge" data-from="SNH" data-to="TSA">
+  <path d="M 366.52 94.00 Q 304.77 181.94 289.73 274.18" fill="none" stroke="#e67e22" stroke-width="1.8" stroke-dasharray="8,4"/>
+  <polygon points="287.48,288.00 283.81,273.22 295.66,275.15" fill="#e67e22"/>
+</g>
+<g class="edge" data-from="RgnlShO" data-to="RC">
+  <path d="M 96.22 288.00 Q 130.85 193.65 119.60 107.88" fill="none" stroke="#e67e22" stroke-width="1.8" stroke-dasharray="8,4"/>
+  <polygon points="117.78,94.00 125.55,107.10 113.65,108.66" fill="#e67e22"/>
+</g>
+<g class="edge" data-from="RgnlShO" data-to="OCWg">
+  <path d="M 166.00 326.00 Q 282.00 350.00 384.29 328.84" fill="none" stroke="#e67e22" stroke-width="1.8" stroke-dasharray="8,4"/>
+  <polygon points="398.00,326.00 385.51,334.71 383.07,322.96" fill="#e67e22"/>
+</g>
+<g class="edge" data-from="RgnlShO" data-to="WgShO">
+  <path d="M 166.00 352.29 Q 273.97 416.12 384.15 432.63" fill="none" stroke="#e67e22" stroke-width="1.8" stroke-dasharray="8,4"/>
+  <polygon points="398.00,434.71 383.27,438.57 385.04,426.70" fill="#e67e22"/>
+</g>
+<g class="edge" data-from="TSA" data-to="RC">
+  <path d="M 250.89 288.00 Q 217.98 179.34 152.34 104.52" fill="none" stroke="#e67e22" stroke-width="1.8" stroke-dasharray="8,4"/>
+  <polygon points="143.11,94.00 156.85,100.57 147.83,108.48" fill="#e67e22"/>
+</g>
+<g class="edge" data-from="TSA" data-to="OCWg">
+  <path d="M 346.00 326.00 Q 372.00 350.00 387.71 335.50" fill="none" stroke="#e67e22" stroke-width="1.8" stroke-dasharray="8,4"/>
+  <polygon points="398.00,326.00 391.78,339.90 383.64,331.09" fill="#e67e22"/>
+</g>
+<g class="edge" data-from="TSA" data-to="WgShO">
+  <path d="M 328.30 364.00 Q 358.57 413.39 401.90 420.68" fill="none" stroke="#e67e22" stroke-width="1.8" stroke-dasharray="8,4"/>
+  <polygon points="415.70,423.00 400.90,426.60 402.89,414.76" fill="#e67e22"/>
+</g>
+<g class="edge" data-from="WgShO" data-to="OCWg">
+  <path d="M 472.00 423.00 Q 496.00 393.50 480.84 374.86" fill="none" stroke="#e67e22" stroke-width="1.8" stroke-dasharray="8,4"/>
+  <polygon points="472.00,364.00 485.49,371.07 476.18,378.65" fill="#e67e22"/>
+</g>
+<g class="edge" data-from="DDH" data-to="ExDir">
+  <path d="M 782.00 94.00 Q 758.00 191.00 778.64 274.41" fill="none" stroke="#3498db" stroke-width="2.5"/>
+  <polygon points="782.00,288.00 772.81,275.85 784.46,272.97" fill="#3498db"/>
+</g>
+<g class="edge" data-from="ExDir" data-to="SPO">
+  <path d="M 782.00 364.00 Q 758.00 393.50 773.16 412.14" fill="none" stroke="#3498db" stroke-width="2.5"/>
+  <polygon points="782.00,423.00 768.51,415.93 777.82,408.35" fill="#3498db"/>
+</g>
+<g class="edge" data-from="SPO" data-to="PO">
+  <path d="M 770.00 499.00 Q 746.00 528.50 761.16 547.14" fill="none" stroke="#3498db" stroke-width="2.5"/>
+  <polygon points="770.00,558.00 756.51,550.93 765.82,543.35" fill="#3498db"/>
+</g>
+<g class="edge" data-from="SPO" data-to="PO">
+  <path d="M 794.00 499.00 Q 770.00 528.50 785.16 547.14" fill="none" stroke="#9b59b6" stroke-width="1.8" stroke-dasharray="3,5"/>
+  <polygon points="794.00,558.00 780.51,550.93 789.82,543.35" fill="#9b59b6"/>
+</g>
+<g class="edge" data-from="TSA" data-to="DDH">
+  <path d="M 343.78 288.00 Q 538.23 212.21 698.68 101.93" fill="none" stroke="#9b59b6" stroke-width="1.8" stroke-dasharray="3,5"/>
+  <polygon points="710.22,94.00 702.08,106.87 695.29,96.99" fill="#9b59b6"/>
+</g>
+<g class="edge" data-from="TSA" data-to="ExDir">
+  <path d="M 346.00 326.00 Q 527.00 350.00 694.12 327.84" fill="none" stroke="#9b59b6" stroke-width="1.8" stroke-dasharray="3,5"/>
+  <polygon points="708.00,326.00 694.91,333.79 693.33,321.89" fill="#9b59b6"/>
+</g>
+<g class="edge" data-from="TSA" data-to="SPO">
+  <path d="M 346.00 345.59 Q 520.86 416.70 694.12 439.58" fill="none" stroke="#9b59b6" stroke-width="1.8" stroke-dasharray="3,5"/>
+  <polygon points="708.00,441.41 693.34,445.53 694.91,433.63" fill="#9b59b6"/>
+</g>
+<g class="edge" data-from="TSA" data-to="PO">
+  <path d="M 343.78 364.00 Q 515.77 482.21 697.18 552.92" fill="none" stroke="#9b59b6" stroke-width="1.8" stroke-dasharray="3,5"/>
+  <polygon points="710.22,558.00 695.00,558.51 699.36,547.33" fill="#9b59b6"/>
+</g>
+<g class="edge" data-from="SPO" data-to="DDH">
+  <path d="M 782.00 423.00 Q 806.00 258.50 784.02 107.85" fill="none" stroke="#9b59b6" stroke-width="1.8" stroke-dasharray="3,5"/>
+  <polygon points="782.00,94.00 789.96,106.99 778.08,108.72" fill="#9b59b6"/>
+</g>
+<g class="edge" data-from="SPO" data-to="ExDir">
+  <path d="M 782.00 423.00 Q 806.00 393.50 790.84 374.86" fill="none" stroke="#9b59b6" stroke-width="1.8" stroke-dasharray="3,5"/>
+  <polygon points="782.00,364.00 795.49,371.07 786.18,378.65" fill="#9b59b6"/>
+</g>
+
+<g class="node-g node-org" data-id="RC" transform="translate(50,20)">
+  <rect class="node-card nc-bg nc-stroke" x="0" y="0" width="144" height="72" rx="7" stroke-width="1"/>
+  <rect class="nc-fill-strip" x="0" y="0" width="144" height="5" rx="3" opacity="0.9"/>
+  <text class="nc-text" x="72.00" y="32" text-anchor="middle" font-size="15" font-weight="800" font-family="DM Sans,Segoe UI,sans-serif">RC</text>
+  <text class="nc-text nc-sub" x="72.00" y="50" text-anchor="middle" font-size="8.2" font-family="DM Sans,Segoe UI,sans-serif" opacity="0.55">Regional Commandant</text>
+  <text class="nc-badge" x="72.00" y="63" text-anchor="middle" font-size="7" font-weight="700" font-family="DM Sans,Segoe UI,sans-serif" letter-spacing="0.12em" opacity="0.65">ORG ROLE</text>
+</g>
+<g class="node-g node-org" data-id="SNH" transform="translate(310,20)">
+  <rect class="node-card nc-bg nc-stroke" x="0" y="0" width="144" height="72" rx="7" stroke-width="1"/>
+  <rect class="nc-fill-strip" x="0" y="0" width="144" height="5" rx="3" opacity="0.9"/>
+  <text class="nc-text" x="72.00" y="32" text-anchor="middle" font-size="15" font-weight="800" font-family="DM Sans,Segoe UI,sans-serif">SNH</text>
+  <text class="nc-text nc-sub" x="72.00" y="50" text-anchor="middle" font-size="8.2" font-family="DM Sans,Segoe UI,sans-serif" opacity="0.55">Shooting National Head</text>
+  <text class="nc-badge" x="72.00" y="63" text-anchor="middle" font-size="7" font-weight="700" font-family="DM Sans,Segoe UI,sans-serif" letter-spacing="0.12em" opacity="0.65">ORG ROLE</text>
+</g>
+<g class="node-g node-org" data-id="SSO" transform="translate(50,155)">
+  <rect class="node-card nc-bg nc-stroke" x="0" y="0" width="144" height="72" rx="7" stroke-width="1"/>
+  <rect class="nc-fill-strip" x="0" y="0" width="144" height="5" rx="3" opacity="0.9"/>
+  <text class="nc-text" x="72.00" y="32" text-anchor="middle" font-size="15" font-weight="800" font-family="DM Sans,Segoe UI,sans-serif">SSO</text>
+  <text class="nc-text nc-sub" x="72.00" y="50" text-anchor="middle" font-size="8.2" font-family="DM Sans,Segoe UI,sans-serif" opacity="0.55">Senior Staff Officer</text>
+  <text class="nc-badge" x="72.00" y="63" text-anchor="middle" font-size="7" font-weight="700" font-family="DM Sans,Segoe UI,sans-serif" letter-spacing="0.12em" opacity="0.65">ORG ROLE</text>
+</g>
+<g class="node-g node-org" data-id="RgnlShO" transform="translate(20,290)">
+  <rect class="node-card nc-bg nc-stroke" x="0" y="0" width="144" height="72" rx="7" stroke-width="1"/>
+  <rect class="nc-fill-strip" x="0" y="0" width="144" height="5" rx="3" opacity="0.9"/>
+  <text class="nc-text" x="72.00" y="32" text-anchor="middle" font-size="15" font-weight="800" font-family="DM Sans,Segoe UI,sans-serif">Rgnl ShO</text>
+  <text class="nc-text nc-sub" x="72.00" y="50" text-anchor="middle" font-size="8.2" font-family="DM Sans,Segoe UI,sans-serif" opacity="0.55">Regional Shooting Officer</text>
+  <text class="nc-badge" x="72.00" y="63" text-anchor="middle" font-size="7" font-weight="700" font-family="DM Sans,Segoe UI,sans-serif" letter-spacing="0.12em" opacity="0.65">ORG ROLE</text>
+</g>
+<g class="node-g node-org" data-id="TSA" transform="translate(200,290)">
+  <rect class="node-card nc-bg nc-stroke" x="0" y="0" width="144" height="72" rx="7" stroke-width="1"/>
+  <rect class="nc-fill-strip" x="0" y="0" width="144" height="5" rx="3" opacity="0.9"/>
+  <text class="nc-text" x="72.00" y="32" text-anchor="middle" font-size="15" font-weight="800" font-family="DM Sans,Segoe UI,sans-serif">TSA</text>
+  <text class="nc-text nc-sub" x="72.00" y="50" text-anchor="middle" font-size="8.2" font-family="DM Sans,Segoe UI,sans-serif" opacity="0.55">Training Safety Advisor</text>
+  <text class="nc-badge" x="72.00" y="63" text-anchor="middle" font-size="7" font-weight="700" font-family="DM Sans,Segoe UI,sans-serif" letter-spacing="0.12em" opacity="0.65">ORG ROLE</text>
+</g>
+<g class="node-g node-org" data-id="OCWg" transform="translate(400,290)">
+  <rect class="node-card nc-bg nc-stroke" x="0" y="0" width="144" height="72" rx="7" stroke-width="1"/>
+  <rect class="nc-fill-strip" x="0" y="0" width="144" height="5" rx="3" opacity="0.9"/>
+  <text class="nc-text" x="72.00" y="32" text-anchor="middle" font-size="15" font-weight="800" font-family="DM Sans,Segoe UI,sans-serif">OC Wg</text>
+  <text class="nc-text nc-sub" x="72.00" y="50" text-anchor="middle" font-size="8.2" font-family="DM Sans,Segoe UI,sans-serif" opacity="0.55">Officer Commanding Wing</text>
+  <text class="nc-badge" x="72.00" y="63" text-anchor="middle" font-size="7" font-weight="700" font-family="DM Sans,Segoe UI,sans-serif" letter-spacing="0.12em" opacity="0.65">ORG ROLE</text>
+</g>
+<g class="node-g node-org" data-id="WgShO" transform="translate(400,425)">
+  <rect class="node-card nc-bg nc-stroke" x="0" y="0" width="144" height="72" rx="7" stroke-width="1"/>
+  <rect class="nc-fill-strip" x="0" y="0" width="144" height="5" rx="3" opacity="0.9"/>
+  <text class="nc-text" x="72.00" y="32" text-anchor="middle" font-size="15" font-weight="800" font-family="DM Sans,Segoe UI,sans-serif">Wg ShO</text>
+  <text class="nc-text nc-sub" x="72.00" y="50" text-anchor="middle" font-size="8.2" font-family="DM Sans,Segoe UI,sans-serif" opacity="0.55">Wing Shooting Officer</text>
+  <text class="nc-badge" x="72.00" y="63" text-anchor="middle" font-size="7" font-weight="700" font-family="DM Sans,Segoe UI,sans-serif" letter-spacing="0.12em" opacity="0.65">ORG ROLE</text>
+</g>
+<g class="node-g node-planning" data-id="DDH" transform="translate(710,20)">
+  <rect class="node-card nc-bg nc-stroke" x="0" y="0" width="144" height="72" rx="7" stroke-width="1"/>
+  <rect class="nc-fill-strip" x="0" y="0" width="144" height="5" rx="3" opacity="0.9"/>
+  <text class="nc-text" x="72.00" y="32" text-anchor="middle" font-size="15" font-weight="800" font-family="DM Sans,Segoe UI,sans-serif">DDH</text>
+  <text class="nc-text nc-sub" x="72.00" y="50" text-anchor="middle" font-size="8.2" font-family="DM Sans,Segoe UI,sans-serif" opacity="0.55">Delivery Duty Holder</text>
+  <text class="nc-badge" x="72.00" y="63" text-anchor="middle" font-size="7" font-weight="700" font-family="DM Sans,Segoe UI,sans-serif" letter-spacing="0.12em" opacity="0.65">PLANNING APPT</text>
+</g>
+<g class="node-g node-planning" data-id="ExDir" transform="translate(710,290)">
+  <rect class="node-card nc-bg nc-stroke" x="0" y="0" width="144" height="72" rx="7" stroke-width="1"/>
+  <rect class="nc-fill-strip" x="0" y="0" width="144" height="5" rx="3" opacity="0.9"/>
+  <text class="nc-text" x="72.00" y="32" text-anchor="middle" font-size="15" font-weight="800" font-family="DM Sans,Segoe UI,sans-serif">Ex Dir</text>
+  <text class="nc-text nc-sub" x="72.00" y="50" text-anchor="middle" font-size="8.2" font-family="DM Sans,Segoe UI,sans-serif" opacity="0.55">Exercise Director</text>
+  <text class="nc-badge" x="72.00" y="63" text-anchor="middle" font-size="7" font-weight="700" font-family="DM Sans,Segoe UI,sans-serif" letter-spacing="0.12em" opacity="0.65">PLANNING APPT</text>
+</g>
+<g class="node-g node-planning" data-id="SPO" transform="translate(710,425)">
+  <rect class="node-card nc-bg nc-stroke" x="0" y="0" width="144" height="72" rx="7" stroke-width="1"/>
+  <rect class="nc-fill-strip" x="0" y="0" width="144" height="5" rx="3" opacity="0.9"/>
+  <text class="nc-text" x="72.00" y="32" text-anchor="middle" font-size="15" font-weight="800" font-family="DM Sans,Segoe UI,sans-serif">SPO</text>
+  <text class="nc-text nc-sub" x="72.00" y="50" text-anchor="middle" font-size="8.2" font-family="DM Sans,Segoe UI,sans-serif" opacity="0.55">Senior Planning Officer</text>
+  <text class="nc-badge" x="72.00" y="63" text-anchor="middle" font-size="7" font-weight="700" font-family="DM Sans,Segoe UI,sans-serif" letter-spacing="0.12em" opacity="0.65">PLANNING APPT</text>
+</g>
+<g class="node-g node-planning" data-id="PO" transform="translate(710,560)">
+  <rect class="node-card nc-bg nc-stroke" x="0" y="0" width="144" height="72" rx="7" stroke-width="1"/>
+  <rect class="nc-fill-strip" x="0" y="0" width="144" height="5" rx="3" opacity="0.9"/>
+  <text class="nc-text" x="72.00" y="32" text-anchor="middle" font-size="15" font-weight="800" font-family="DM Sans,Segoe UI,sans-serif">PO</text>
+  <text class="nc-text nc-sub" x="72.00" y="50" text-anchor="middle" font-size="8.2" font-family="DM Sans,Segoe UI,sans-serif" opacity="0.55">Planning Officer</text>
+  <text class="nc-badge" x="72.00" y="63" text-anchor="middle" font-size="7" font-weight="700" font-family="DM Sans,Segoe UI,sans-serif" letter-spacing="0.12em" opacity="0.65">PLANNING APPT</text>
+</g>
+
+</svg>
+</div>
+
+<div id="notes">
+  <span class="lbl" id="notes-lbl">Notes &mdash; </span>
+  <strong id="n1">DDH</strong> is always the RC. &nbsp;|&nbsp;
+  <strong id="n2">Ex Dir</strong>: RC or SSO (regional activities); OC Wg (wing activities). &nbsp;|&nbsp;
+  <strong id="n3">SPO</strong>: any SQEP &mdash; often the Rgnl ShO or Wg ShO. &nbsp;|&nbsp;
+  <strong id="n4">PO</strong>: any SQEP.
+</div>
+<div id="attribution">Created by the Shooting National Head, Wg Cdr Dan Azizian</div>
+<div id="footer">RAFAC Military Skills &middot; Command &amp; Advisory Organogram</div>
+
+<script>
+const THEME = {"dark":{"bodyBg":"linear-gradient(150deg,#04090f 0%,#081420 60%,#040c14 100%)","titleSuper":"#3a6080","titleMain":"#d8eeff","titleSub":"#3a6080","legSpan":"#6a9cc0","diagramBg":"#060e18","diagramBord":"#0f2030","orgSecFill":"#0a1e12","orgSecStroke":"#163424","orgSecLbl":"#1e5030","planSecFill":"#08132a","planSecStroke":"#142244","planSecLbl":"#1a3460","notesBg":"#060e18","notesBord":"#0e2030","notesText":"#4a7898","notesLbl":"#7aaac8","notesStrong":"#6aaac8","attribution":"#2a4a62","footer":"#182838","toggleBg":"#0f2030","toggleText":"#6a9cc0","toggleBord":"#1a3a54","org":{"bg":"#0d2618","border":"#2ecc71","text":"#e8fdf0","badgeOp":"0.65"},"plan":{"bg":"#0d1e38","border":"#3498db","text":"#e8f4fd","badgeOp":"0.65"}},"light":{"bodyBg":"linear-gradient(150deg,#eef4f8 0%,#f5f8fa 60%,#eaf2f8 100%)","titleSuper":"#5a8090","titleMain":"#0d2a3a","titleSub":"#5a8090","legSpan":"#2a5070","diagramBg":"#ffffff","diagramBord":"#c8dce8","orgSecFill":"#edfaf2","orgSecStroke":"#a0d8b8","orgSecLbl":"#2a6040","planSecFill":"#eaf4fd","planSecStroke":"#a0c8e8","planSecLbl":"#1a4068","notesBg":"#f0f6fa","notesBord":"#c8dce8","notesText":"#2a5070","notesLbl":"#1a5078","notesStrong":"#1a4a6a","attribution":"#3a6888","footer":"#6a8898","toggleBg":"#e0eaf2","toggleText":"#2a5070","toggleBord":"#b0c8da","org":{"bg":"#f0fdf6","border":"#27ae60","text":"#0a2a18","badgeOp":"0.8"},"plan":{"bg":"#eff7fe","border":"#2474b5","text":"#0a1e38","badgeOp":"0.8"}}};
+const EDGES_META = [{"from":"RC","to":"SSO"},{"from":"RC","to":"TSA"},{"from":"SSO","to":"RgnlShO"},{"from":"SSO","to":"OCWg"},{"from":"OCWg","to":"WgShO"},{"from":"SNH","to":"RC"},{"from":"SNH","to":"RgnlShO"},{"from":"SNH","to":"TSA"},{"from":"RgnlShO","to":"RC"},{"from":"RgnlShO","to":"OCWg"},{"from":"RgnlShO","to":"WgShO"},{"from":"TSA","to":"RC"},{"from":"TSA","to":"OCWg"},{"from":"TSA","to":"WgShO"},{"from":"WgShO","to":"OCWg"},{"from":"DDH","to":"ExDir"},{"from":"ExDir","to":"SPO"},{"from":"SPO","to":"PO"},{"from":"TSA","to":"DDH"},{"from":"TSA","to":"ExDir"},{"from":"TSA","to":"SPO"},{"from":"TSA","to":"PO"},{"from":"SPO","to":"DDH"},{"from":"SPO","to":"ExDir"}];
+let currentTheme = 'dark';
+let pinned = null;
+
+function applyTheme(name) {
+  const t = THEME[name];
+
+  // Body
+  document.body.style.background = t.bodyBg;
+
+  // Title
+  document.getElementById('title-super').style.color = t.titleSuper;
+  document.getElementById('title-main').style.color  = t.titleMain;
+  document.getElementById('title-sub').style.color   = t.titleSub;
+
+  // Toggle button
+  const btn = document.getElementById('toggle-btn');
+  btn.style.background   = t.toggleBg;
+  btn.style.color        = t.toggleText;
+  btn.style.borderColor  = t.toggleBord;
+  btn.textContent = name==='dark' ? '☀ Light mode' : '☾ Dark mode';
+
+  // Legend spans
+  document.querySelectorAll('.leg-item span').forEach(el => el.style.color = t.legSpan);
+
+  // Legend type badges
+  document.getElementById('lb-org').style.cssText  = 'border:2px solid '+t.org.border+';background:'+t.org.border+'22;width:12px;height:12px;border-radius:3px;';
+  document.getElementById('lb-plan').style.cssText = 'border:2px solid '+t.plan.border+';background:'+t.plan.border+'22;width:12px;height:12px;border-radius:3px;';
+
+  // Diagram wrap
+  const dw = document.getElementById('diagram-wrap');
+  dw.style.background  = t.diagramBg;
+  dw.style.borderColor = t.diagramBord;
+
+  // Section backgrounds
+  document.getElementById('sec-org-bg').setAttribute('fill',   t.orgSecFill);
+  document.getElementById('sec-org-bg').setAttribute('stroke', t.orgSecStroke);
+  document.getElementById('sec-org-lbl').setAttribute('fill',  t.orgSecLbl);
+  document.getElementById('sec-plan-bg').setAttribute('fill',   t.planSecFill);
+  document.getElementById('sec-plan-bg').setAttribute('stroke', t.planSecStroke);
+  document.getElementById('sec-plan-lbl').setAttribute('fill',  t.planSecLbl);
+
+  // Nodes
+  document.querySelectorAll('.node-org').forEach(g => {
+    const nc = t.org;
+    g.querySelector('.node-card').setAttribute('fill',   nc.bg);
+    g.querySelector('.node-card').setAttribute('stroke', nc.border);
+    g.querySelector('.nc-fill-strip').setAttribute('fill', nc.border);
+    g.querySelectorAll('.nc-text').forEach(el => el.setAttribute('fill', nc.text));
+    g.querySelector('.nc-badge').setAttribute('fill', nc.border);
+  });
+  document.querySelectorAll('.node-planning').forEach(g => {
+    const nc = t.plan;
+    g.querySelector('.node-card').setAttribute('fill',   nc.bg);
+    g.querySelector('.node-card').setAttribute('stroke', nc.border);
+    g.querySelector('.nc-fill-strip').setAttribute('fill', nc.border);
+    g.querySelectorAll('.nc-text').forEach(el => el.setAttribute('fill', nc.text));
+    g.querySelector('.nc-badge').setAttribute('fill', nc.border);
+  });
+
+  // Notes
+  const notes = document.getElementById('notes');
+  notes.style.background   = t.notesBg;
+  notes.style.borderColor  = t.notesBord;
+  notes.style.color        = t.notesText;
+  document.getElementById('notes-lbl').style.color = t.notesLbl;
+  ['n1','n2','n3','n4'].forEach(id => {
+    document.getElementById(id).style.color = t.notesStrong;
+  });
+
+  // Footer
+  document.getElementById('attribution').style.color = t.attribution;
+  document.getElementById('footer').style.color      = t.footer;
+}
+
+function toggleTheme() {
+  currentTheme = currentTheme==='dark' ? 'light' : 'dark';
+  applyTheme(currentTheme);
+}
+
+// Interactivity
+function updateOpacity(active) {
+  document.querySelectorAll('.edge').forEach(el => {
+    el.style.opacity = (!active||el.dataset.from===active||el.dataset.to===active) ? '1' : '0.08';
+  });
+  document.querySelectorAll('.node-g').forEach(el => {
+    const id=el.dataset.id;
+    if (!active||id===active){el.style.opacity='1';return;}
+    const conn=EDGES_META.some(e=>(e.from===active&&e.to===id)||(e.to===active&&e.from===id));
+    el.style.opacity=conn?'1':'0.15';
+  });
+}
+
+document.querySelectorAll('.node-g').forEach(el => {
+  el.addEventListener('mouseenter', () => { if (!pinned) updateOpacity(el.dataset.id); });
+  el.addEventListener('mouseleave', () => { if (!pinned) updateOpacity(null); });
+  el.addEventListener('click', () => {
+    pinned = (pinned===el.dataset.id) ? null : el.dataset.id;
+    updateOpacity(pinned);
+  });
+  el.addEventListener('touchend', e => {
+    e.preventDefault();
+    pinned = (pinned===el.dataset.id) ? null : el.dataset.id;
+    updateOpacity(pinned);
+  });
+});
+
+// Initialise dark mode
+applyTheme('dark');
+</script>
+</body>
+</html>
