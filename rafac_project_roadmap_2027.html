@@ -1,17 +1,23 @@
-<h2 class="sr-only">Roadmap of twenty RAFAC military skills projects across 2027, grouped by owner, showing which are fixed-timeframe and which are ongoing</h2>
+<h2 class="sr-only">Roadmap of twenty RAFAC military skills projects across 2027, grouped by owner, with a summary for each project available on hover or by clicking to expand</h2>
 <style>
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 .rm-section{font-size:12px;font-weight:500;color:var(--text-secondary);margin:14px 0 6px;padding-top:8px;border-top:0.5px solid var(--border)}
 .rm-section:first-of-type{border-top:none;padding-top:0;margin-top:0}
-.rm-row{display:grid;grid-template-columns:200px 1fr;align-items:center;gap:12px;min-height:28px}
-.rm-name{font-size:13px;color:var(--text-primary);line-height:1.3}
+.rm-row{display:grid;grid-template-columns:200px 1fr;align-items:center;gap:12px;min-height:28px;cursor:pointer;padding:2px 4px;border-radius:6px}
+.rm-row:hover{background:var(--surface-1)}
+.rm-row:focus-visible{outline:2px solid var(--border-accent);outline-offset:2px}
+.rm-name{font-size:13px;color:var(--text-primary);display:flex;align-items:center;justify-content:space-between;gap:6px}
+.rm-chevron{font-size:14px;color:var(--text-muted);transition:transform .15s;flex-shrink:0}
+.rm-row[aria-expanded="true"] .rm-chevron{transform:rotate(180deg)}
 .rm-track{position:relative;height:18px;border-radius:4px;background-image:linear-gradient(to right, var(--border) 0, var(--border) 1px, transparent 1px);background-size:calc(100%/12) 100%}
 .rm-bar{position:absolute;top:2px;height:14px;border-radius:4px}
+.rm-detail{display:none;padding:2px 0 12px 212px}
+.rm-detail p{margin:0;font-size:12px;line-height:1.5;padding-left:10px}
 .rm-legend{display:flex;flex-wrap:wrap;gap:16px;font-size:12px;color:var(--text-secondary);margin-bottom:14px}
 .rm-dot{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
 </style>
 <div id="rm-legend" class="rm-legend"></div>
-<div id="rm-header" class="rm-row" style="margin-bottom:8px"></div>
+<div id="rm-header" class="rm-row" style="cursor:default"></div>
 <div id="rm-body"></div>
 <script>
 const themeMode = document.documentElement.dataset.mode;
@@ -22,31 +28,31 @@ const owners = {
   joint: { label: 'Joint',          light: '#6250d6', dark: '#9085e9' }
 };
 function ownerColor(o){ return isDark ? owners[o].dark : owners[o].light; }
-
 const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const monthShort = ['J','F','M','A','M','J','J','A','S','O','N','D'];
+const noSummary = 'No summary added yet.';
 
 const projects = [
-  { owner:'dan', name:'ACP 18 Vol 1', type:'ongoing' },
-  { owner:'dan', name:'ACP 18 Vol 3', type:'ongoing' },
-  { owner:'dan', name:'Unified Air Rifle Manual', type:'timed', start:0, end:3 },
-  { owner:'dan', name:'Rifle & Fieldcraft Lesson Logging', type:'timed', start:1, end:4 },
-  { owner:'dan', name:'Digital Annual Reviews of Qualifications', type:'timed', start:1, end:5 },
-  { owner:'dan', name:'RAFAC APSC Course re-write', type:'timed', start:4, end:8 },
-  { owner:'dan', name:'SASC Course Pre-requisites', type:'timed', start:5, end:8 },
-  { owner:'dan', name:'CSM adoption', type:'timed', start:6, end:9 },
-  { owner:'dan', name:'SSO Generator v2', type:'timed', start:8, end:11 },
-  { owner:'dan', name:'Reporting Portal', type:'timed', start:8, end:11 },
-  { owner:'dan', name:'Parenting Review', type:'timed', start:9, end:10 },
-  { owner:'matt', name:'Shooting & Fieldcraft data reporting', type:'timed', start:3, end:7 },
-  { owner:'matt', name:'New declaration in CTR', type:'timed', start:2, end:4 },
-  { owner:'matt', name:'ShO & FTO TORs', type:'timed', start:4, end:7 },
-  { owner:'matt', name:'Coaching Courses review & development', type:'timed', start:5, end:9 },
-  { owner:'matt', name:'Air Rifle Admin Simplification', type:'timed', start:3, end:6 },
-  { owner:'matt', name:'All Shooting Competition governance and participation', type:'ongoing' },
-  { owner:'joint', name:'Digital Policy Project', type:'timed', start:0, end:5 },
-  { owner:'joint', name:'CLF logging', type:'timed', start:2, end:6 },
-  { owner:'joint', name:'Military Skills Knowledge Hub', type:'timed', start:7, end:11 }
+  { owner:'dan', name:'ACP 18 Vol 1', type:'ongoing', summary:noSummary },
+  { owner:'dan', name:'ACP 18 Vol 3', type:'ongoing', summary:noSummary },
+  { owner:'dan', name:'Unified Air Rifle Manual', type:'timed', start:0, end:3, hasSummary:true, summary:'Creating a new version of Cadet Training - Skill At Arms for the Air Rifle, which combines the lessons and WHTs for the different air rifles / variants. The goal is to reduce training and testing burden, recognising that there is no real difference in drills or safe handling of different PCP air rifles, only where there is a difference between single-shot and magazine-fed variants. This is a tri-Service document and policy, led by RAFAC. Oversight provided by Spencer James.' },
+  { owner:'dan', name:'Rifle & Fieldcraft Lesson Logging', type:'timed', start:1, end:4, summary:noSummary },
+  { owner:'dan', name:'Digital Annual Reviews of Qualifications', type:'timed', start:1, end:5, summary:noSummary },
+  { owner:'dan', name:'RAFAC APSC Course re-write', type:'timed', start:4, end:8, summary:noSummary },
+  { owner:'dan', name:'SASC Course Pre-requisites', type:'timed', start:5, end:8, summary:noSummary },
+  { owner:'dan', name:'CSM adoption', type:'timed', start:6, end:9, summary:noSummary },
+  { owner:'dan', name:'SSO Generator v2', type:'timed', start:8, end:11, summary:noSummary },
+  { owner:'dan', name:'Reporting Portal', type:'timed', start:8, end:11, summary:noSummary },
+  { owner:'dan', name:'Parenting Review', type:'timed', start:9, end:10, summary:noSummary },
+  { owner:'matt', name:'Shooting & Fieldcraft data reporting', type:'timed', start:3, end:7, summary:noSummary },
+  { owner:'matt', name:'New declaration in CTR', type:'timed', start:2, end:4, summary:noSummary },
+  { owner:'matt', name:'ShO & FTO TORs', type:'timed', start:4, end:7, summary:noSummary },
+  { owner:'matt', name:'Coaching Courses review & development', type:'timed', start:5, end:9, summary:noSummary },
+  { owner:'matt', name:'Air Rifle Admin Simplification', type:'timed', start:3, end:6, summary:noSummary },
+  { owner:'matt', name:'All Shooting Competition governance and participation', type:'ongoing', summary:noSummary },
+  { owner:'joint', name:'Digital Policy Project', type:'timed', start:0, end:5, summary:noSummary },
+  { owner:'joint', name:'CLF logging', type:'timed', start:2, end:6, summary:noSummary },
+  { owner:'joint', name:'Military Skills Knowledge Hub', type:'timed', start:7, end:11, summary:noSummary }
 ];
 
 const legend = document.getElementById('rm-legend');
@@ -55,40 +61,87 @@ Object.keys(owners).forEach(o => {
   span.innerHTML = '<span class="rm-dot" style="background:' + ownerColor(o) + '"></span>' + owners[o].label;
   legend.appendChild(span);
 });
-const hatchNote = document.createElement('span');
-hatchNote.textContent = 'Striped bar = ongoing / no fixed end';
-legend.appendChild(hatchNote);
+const note1 = document.createElement('span'); note1.textContent = 'Striped bar = ongoing'; legend.appendChild(note1);
+const note2 = document.createElement('span'); note2.textContent = 'Hover name = summary, hover bar = dates, click row = expand'; legend.appendChild(note2);
 
 const header = document.getElementById('rm-header');
 header.innerHTML = '<span></span><div style="display:grid;grid-template-columns:repeat(12,1fr);font-size:11px;color:var(--text-muted);text-align:center">' +
   monthShort.map(m => '<span>' + m + '</span>').join('') + '</div>';
 
+function buildRow(p){
+  const wrap = document.createElement('div');
+
+  const row = document.createElement('div');
+  row.className = 'rm-row';
+  row.tabIndex = 0;
+  row.setAttribute('role','button');
+  row.setAttribute('aria-expanded','false');
+
+  const nameSpan = document.createElement('span');
+  nameSpan.className = 'rm-name';
+  const nameText = document.createElement('span');
+  nameText.textContent = p.name;
+  nameText.title = p.summary.length > 90 ? (p.summary.slice(0,90) + '\u2026') : p.summary;
+  const chev = document.createElement('i');
+  chev.className = 'ti ti-chevron-down rm-chevron';
+  chev.setAttribute('aria-hidden','true');
+  nameSpan.appendChild(nameText);
+  nameSpan.appendChild(chev);
+
+  const track = document.createElement('div');
+  track.className = 'rm-track';
+  const bar = document.createElement('div');
+  bar.className = 'rm-bar';
+  const color = ownerColor(p.owner);
+  const isOngoing = p.type === 'ongoing';
+  const left = isOngoing ? 0 : (p.start/12)*100;
+  const width = isOngoing ? 100 : ((p.end-p.start+1)/12)*100;
+  const dateText = isOngoing ? 'Ongoing, no fixed end' : (monthNames[p.start] + '\u2013' + monthNames[p.end] + ' 2027');
+  bar.title = p.name + ' \u2014 ' + dateText;
+  bar.style.left = left + '%';
+  bar.style.width = width + '%';
+  if (isOngoing) {
+    bar.style.backgroundImage = 'repeating-linear-gradient(135deg, ' + color + ' 0 4px, transparent 4px 8px)';
+    bar.style.borderRadius = '2px';
+  } else {
+    bar.style.backgroundColor = color;
+  }
+  track.appendChild(bar);
+
+  row.appendChild(nameSpan);
+  row.appendChild(track);
+
+  const detail = document.createElement('div');
+  detail.className = 'rm-detail';
+  const detailP = document.createElement('p');
+  detailP.style.borderLeft = '2px solid ' + color;
+  detailP.style.color = p.hasSummary ? 'var(--text-secondary)' : 'var(--text-muted)';
+  if (!p.hasSummary) detailP.style.fontStyle = 'italic';
+  detailP.textContent = p.summary;
+  detail.appendChild(detailP);
+
+  function toggle(){
+    const expanded = row.getAttribute('aria-expanded') === 'true';
+    row.setAttribute('aria-expanded', String(!expanded));
+    detail.style.display = expanded ? 'none' : 'block';
+  }
+  row.addEventListener('click', toggle);
+  row.addEventListener('keydown', function(e){
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+  });
+
+  wrap.appendChild(row);
+  wrap.appendChild(detail);
+  return wrap;
+}
+
 const body = document.getElementById('rm-body');
-const order = ['dan','matt','joint'];
-order.forEach(ownerKey => {
+const sectionLabels = { dan: owners.dan.label, matt: owners.matt.label, joint: 'Joint projects (Dan & Matt)' };
+['dan','matt','joint'].forEach(ownerKey => {
   const section = document.createElement('div');
   section.className = 'rm-section';
-  section.textContent = owners[ownerKey].label + (ownerKey === 'joint' ? ' & ' + owners.dan.label + ' + ' + owners.matt.label : '');
-  section.textContent = ownerKey === 'joint' ? 'Joint projects (both Wings)' : owners[ownerKey].label;
+  section.textContent = sectionLabels[ownerKey];
   body.appendChild(section);
-
-  projects.filter(p => p.owner === ownerKey).forEach(p => {
-    const row = document.createElement('div');
-    row.className = 'rm-row';
-    const color = ownerColor(p.owner);
-    const isOngoing = p.type === 'ongoing';
-    const left = isOngoing ? 0 : (p.start / 12) * 100;
-    const width = isOngoing ? 100 : ((p.end - p.start + 1) / 12) * 100;
-    const dateText = isOngoing ? 'Ongoing, no fixed end' : (monthNames[p.start] + '\u2013' + monthNames[p.end] + ' 2027');
-    const barStyle = isOngoing
-      ? 'background-image: repeating-linear-gradient(135deg, ' + color + ' 0 4px, transparent 4px 8px); border-radius: 2px;'
-      : 'background-color: ' + color + ';';
-    row.innerHTML =
-      '<span class="rm-name">' + p.name + '</span>' +
-      '<div class="rm-track">' +
-        '<div class="rm-bar" title="' + p.name + ' \u2014 ' + dateText + '" style="left:' + left + '%; width:' + width + '%; ' + barStyle + '"></div>' +
-      '</div>';
-    body.appendChild(row);
-  });
+  projects.filter(p => p.owner === ownerKey).forEach(p => body.appendChild(buildRow(p)));
 });
 </script>
