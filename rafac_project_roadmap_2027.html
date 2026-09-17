@@ -1,27 +1,71 @@
-<h2 class="sr-only">Roadmap of twenty RAFAC military skills projects across 2027, grouped by owner, with a summary for each project available on hover or by clicking to expand</h2>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RAFAC project roadmap — 2027</title>
 <style>
-.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-.rm-section{font-size:12px;font-weight:500;color:var(--text-secondary);margin:14px 0 6px;padding-top:8px;border-top:0.5px solid var(--border)}
-.rm-section:first-of-type{border-top:none;padding-top:0;margin-top:0}
-.rm-row{display:grid;grid-template-columns:200px 1fr;align-items:center;gap:12px;min-height:28px;cursor:pointer;padding:2px 4px;border-radius:6px}
-.rm-row:hover{background:var(--surface-1)}
-.rm-row:focus-visible{outline:2px solid var(--border-accent);outline-offset:2px}
-.rm-name{font-size:13px;color:var(--text-primary);display:flex;align-items:center;justify-content:space-between;gap:6px}
-.rm-chevron{font-size:14px;color:var(--text-muted);transition:transform .15s;flex-shrink:0}
-.rm-row[aria-expanded="true"] .rm-chevron{transform:rotate(180deg)}
-.rm-track{position:relative;height:18px;border-radius:4px;background-image:linear-gradient(to right, var(--border) 0, var(--border) 1px, transparent 1px);background-size:calc(100%/12) 100%}
-.rm-bar{position:absolute;top:2px;height:14px;border-radius:4px}
-.rm-detail{display:none;padding:2px 0 12px 212px}
-.rm-detail p{margin:0;font-size:12px;line-height:1.5;padding-left:10px}
-.rm-legend{display:flex;flex-wrap:wrap;gap:16px;font-size:12px;color:var(--text-secondary);margin-bottom:14px}
-.rm-dot{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+  :root{
+    --surface-1:#f2f1ed;
+    --surface-2:#ffffff;
+    --text-primary:#0b0b0b;
+    --text-secondary:#52514e;
+    --text-muted:#898781;
+    --border:rgba(11,11,11,0.12);
+    --border-strong:rgba(11,11,11,0.28);
+    --border-accent:#2a78d6;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --surface-1:#242422;
+      --surface-2:#1a1a19;
+      --text-primary:#f0efec;
+      --text-secondary:#c3c2b7;
+      --text-muted:#898781;
+      --border:rgba(255,255,255,0.14);
+      --border-strong:rgba(255,255,255,0.28);
+      --border-accent:#3987e5;
+    }
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    padding:32px 24px 64px;
+    background:var(--surface-2);
+    color:var(--text-primary);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  .rm-wrap{max-width:900px;margin:0 auto}
+  h1{font-size:20px;font-weight:600;margin:0 0 4px}
+  .rm-caption{font-size:13px;color:var(--text-secondary);margin:0 0 24px}
+  .rm-section{font-size:12px;font-weight:600;color:var(--text-secondary);margin:16px 0 6px;padding-top:10px;border-top:0.5px solid var(--border)}
+  .rm-section:first-of-type{border-top:none;padding-top:0;margin-top:0}
+  .rm-row{display:grid;grid-template-columns:200px 1fr;align-items:center;gap:12px;min-height:30px;cursor:pointer;padding:2px 6px;border-radius:6px}
+  .rm-row:hover{background:var(--surface-1)}
+  .rm-row:focus-visible{outline:2px solid var(--border-accent);outline-offset:2px}
+  .rm-name{font-size:13px;color:var(--text-primary);display:flex;align-items:center;justify-content:space-between;gap:6px}
+  .rm-chevron{color:var(--text-muted);transition:transform .15s;flex-shrink:0;display:inline-flex}
+  .rm-chevron svg{display:block}
+  .rm-row[aria-expanded="true"] .rm-chevron{transform:rotate(180deg)}
+  .rm-track{position:relative;height:18px;border-radius:4px;background-image:linear-gradient(to right, var(--border) 0, var(--border) 1px, transparent 1px);background-size:calc(100%/12) 100%}
+  .rm-bar{position:absolute;top:2px;height:14px;border-radius:4px}
+  .rm-detail{display:none;padding:2px 0 14px 212px}
+  .rm-detail p{margin:0;font-size:12px;line-height:1.5;padding-left:10px}
+  .rm-legend{display:flex;flex-wrap:wrap;gap:16px;font-size:12px;color:var(--text-secondary);margin-bottom:18px}
+  .rm-dot{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+  .rm-header{cursor:default}
 </style>
-<div id="rm-legend" class="rm-legend"></div>
-<div id="rm-header" class="rm-row" style="cursor:default"></div>
-<div id="rm-body"></div>
+</head>
+<body>
+<div class="rm-wrap">
+  <h1>RAFAC project roadmap — 2027</h1>
+  <p class="rm-caption">Illustrative timeline — dates are placeholders pending confirmation.</p>
+  <div id="rm-legend" class="rm-legend"></div>
+  <div id="rm-header" class="rm-row rm-header"></div>
+  <div id="rm-body"></div>
+</div>
 <script>
-const themeMode = document.documentElement.dataset.mode;
-const isDark = themeMode ? themeMode === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+const isDark = matchMedia('(prefers-color-scheme: dark)').matches;
 const owners = {
   dan:   { label: 'Wg Cdr Azizian', light: '#2a78d6', dark: '#3987e5' },
   matt:  { label: 'Wg Cdr Oram',    light: '#eb6834', dark: '#d95926' },
@@ -31,6 +75,7 @@ function ownerColor(o){ return isDark ? owners[o].dark : owners[o].light; }
 const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const monthShort = ['J','F','M','A','M','J','J','A','S','O','N','D'];
 const noSummary = 'No summary added yet.';
+const chevronSVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>';
 
 const projects = [
   { owner:'dan', name:'ACP 18 Vol 1', type:'ongoing', summary:noSummary },
@@ -82,9 +127,9 @@ function buildRow(p){
   const nameText = document.createElement('span');
   nameText.textContent = p.name;
   nameText.title = p.summary.length > 90 ? (p.summary.slice(0,90) + '\u2026') : p.summary;
-  const chev = document.createElement('i');
-  chev.className = 'ti ti-chevron-down rm-chevron';
-  chev.setAttribute('aria-hidden','true');
+  const chev = document.createElement('span');
+  chev.className = 'rm-chevron';
+  chev.innerHTML = chevronSVG;
   nameSpan.appendChild(nameText);
   nameSpan.appendChild(chev);
 
@@ -145,3 +190,5 @@ const sectionLabels = { dan: owners.dan.label, matt: owners.matt.label, joint: '
   projects.filter(p => p.owner === ownerKey).forEach(p => body.appendChild(buildRow(p)));
 });
 </script>
+</body>
+</html>
