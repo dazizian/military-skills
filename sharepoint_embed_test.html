@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SharePoint embed test</title>
+<style>
+  :root{
+    --bg:#ffffff; --surface:#f2f1ed; --text:#0b0b0b; --text2:#52514e;
+    --border:rgba(11,11,11,.16); --ok:#1a7f45; --bad:#b3261e; --warn:#8a5a00;
+    --c1:#2a78d6; --c2:#eb6834; --c3:#6250d6;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#1a1a19; --surface:#262624; --text:#f0efec; --text2:#c3c2b7;
+      --border:rgba(255,255,255,.18); --ok:#4cc27f; --bad:#f2867e; --warn:#e0b34a;
+      --c1:#3987e5; --c2:#d95926; --c3:#9085e9;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;padding:20px;background:var(--bg);color:var(--text);
+       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.5}
+  .wrap{max-width:760px;margin:0 auto}
+  h1{font-size:20px;margin:0 0 4px}
+  h2{font-size:14px;margin:24px 0 8px}
+  .lead{color:var(--text2);margin:0 0 16px}
+  .summary{padding:10px 12px;border-radius:8px;background:var(--surface);border:1px solid var(--border);font-weight:600;margin-bottom:12px}
+  .results{list-style:none;margin:0;padding:0}
+  .results li{display:grid;grid-template-columns:64px 1fr;gap:10px;padding:8px 0;border-top:1px solid var(--border)}
+  .results li:first-child{border-top:none}
+  .badge{font-size:11px;font-weight:700;letter-spacing:.04em}
+  .pass{color:var(--ok)} .fail{color:var(--bad)} .info,.wait{color:var(--warn)}
+  .detail{color:var(--text2);display:block;font-size:13px}
+  button{font:inherit;padding:6px 12px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);cursor:pointer}
+  button:hover{border-color:var(--text2)}
+  #count{margin-left:10px;color:var(--text2)}
+  .rm-head,.rm-row{display:grid;grid-template-columns:150px 1fr;gap:10px;align-items:center;min-height:26px}
+  .rm-months{display:grid;grid-template-columns:repeat(12,1fr);font-size:11px;color:var(--text2);text-align:center}
+  .track{position:relative;height:16px;background-image:linear-gradient(to right,var(--border) 0,var(--border) 1px,transparent 1px);background-size:calc(100%/12) 100%}
+  .bar{position:absolute;top:2px;height:12px;border-radius:3px;background:var(--c)}
+  .bar.ongoing{background:repeating-linear-gradient(135deg,var(--c) 0 4px,transparent 4px 8px)}
+  .foot{margin-top:24px;font-size:12px;color:var(--text2)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>SharePoint embed test</h1>
+  <p class="lead">If you can read this on a SharePoint page, custom pages can run there. The checks below show what else works.</p>
+  <noscript><p class="fail"><strong>FAIL</strong> JavaScript is blocked, so the checks cannot run.</p></noscript>
+
+  <div id="summary" class="summary" role="status">Running checks…</div>
+  <ul id="results" class="results"></ul>
+
+  <h2>Click test</h2>
+  <button id="btn" type="button">Click me</button><span id="count" aria-live="polite">Not clicked yet</span>
+
+  <h2>Roadmap preview</h2>
+  <div id="demo"></div>
+
+  <p class="foot">Test page v1 · loaded <span id="ts"></span></p>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  var resultsEl = document.getElementById('results');
+  var summaryEl = document.getElementById('summary');
+  var rows = [];
+
+  function addRow(label, status, detail){
+    var li = document.createElement('li');
+    var badge = document.createElement('span');
+    var body = document.createElement('div');
+    var strong = document.createElement('strong');
+    var det = document.createElement('span');
+    det.className = 'detail';
+    strong.textContent = label;
+    body.appendChild(strong); body.appendChild(det);
+    li.appendChild(badge); li.appendChild(body);
+    resultsEl.appendChild(li);
+    var row = { status: status };
+    function set(s, d){
+      row.status = s;
+      badge.className = 'badge ' + s;
+      badge.textContent = s.toUpperCase();
+      det.textContent = d || '';
+      updateSummary();
+    }
+    row.set = set;
+    rows.push(row);
+    set(status, detail);
+    return row;
+  }
+
+  function updateSummary(){
+    var waiting = rows.some(function(r){ return r.status === 'wait'; });
+    var fails = rows.filter(function(r){ return r.status === 'fail'; }).length;
+    if (waiting) { summaryEl.textContent = 'Running checks…'; return; }
+    summaryEl.textContent = fails
+      ? fails + ' check' + (fails === 1 ? '' : 's') + ' failed — see below'
+      : 'All automatic checks passed';
+  }
+
+  // 1. JavaScript runs (if you can see this row, it does)
+  addRow('JavaScript runs', 'pass', 'This page\'s script is allowed to run.');
+
+  // 2. Inside a frame?
+  var framed;
+  try { framed = window.self !== window.top; } catch (e) { framed = true; }
+  addRow('Shown inside a frame', framed ? 'pass' : 'info',
+    framed ? 'Yes, which is how an Embed web part displays it.'
+           : 'No, you opened the page directly. Embed it in a SharePoint page to test properly.');
+
+  // 3. Which page is hosting the frame
+  if (framed) {
+    var parent = '';
+    try {
+      if (location.ancestorOrigins && location.ancestorOrigins.length) {
+        parent = Array.prototype.join.call(location.ancestorOrigins, ' > ');
+      }
+    } catch (e) {}
+    if (!parent && document.referrer) {
+      try { parent = new URL(document.referrer).origin; } catch (e) {}
+    }
+    addRow('Hosting page', 'info', parent || 'Not exposed by this browser.');
+  }
+
+  // 4. Browser storage
+  try {
+    var k = 'spt-' + Date.now();
+    localStorage.setItem(k, '1');
+    var ok = localStorage.getItem(k) === '1';
+    localStorage.removeItem(k);
+    addRow('Browser storage (localStorage)', ok ? 'pass' : 'fail',
+      ok ? 'Can save and read data in the browser.' : 'Writing worked but reading back failed.');
+  } catch (e) {
+    addRow('Browser storage (localStorage)', 'fail', 'Blocked (' + e.name + '). Anything saved in the browser would not persist here.');
+  }
+
+  // 5. Outbound network request
+  var net = addRow('Outbound network request', 'wait', 'Contacting api.github.com…');
+  try {
+    var ctl = new AbortController();
+    var timer = setTimeout(function(){ ctl.abort(); }, 6000);
+    fetch('https://api.github.com/zen', { signal: ctl.signal })
+      .then(function(r){
+        clearTimeout(timer);
+        net.set(r.ok ? 'pass' : 'fail',
+          r.ok ? 'Page can call an external service (needed if a hosted database is used).'
+               : 'The service answered with an error (' + r.status + ').');
+      })
+      .catch(function(e){
+        clearTimeout(timer);
+        net.set('fail', e && e.name === 'AbortError'
+          ? 'Timed out after 6 seconds.'
+          : 'Blocked or offline. A page here could not call an external database.');
+      });
+  } catch (e) {
+    net.set('fail', 'This browser could not make the request (' + (e && e.name) + ').');
+  }
+
+  // 6. Display size and theme
+  var dark = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches;
+  addRow('Display area', 'info', window.innerWidth + ' × ' + window.innerHeight + ' px, ' + (dark ? 'dark' : 'light') + ' theme.');
+
+  // Click test
+  var n = 0;
+  var countEl = document.getElementById('count');
+  document.getElementById('btn').addEventListener('click', function(){
+    n += 1;
+    countEl.textContent = 'Clicked ' + n + (n === 1 ? ' time' : ' times');
+  });
+
+  // Roadmap preview
+  var months = ['J','F','M','A','M','J','J','A','S','O','N','D'];
+  var demo = [
+    ['Unified Air Rifle Manual', '--c1', 0, 3],
+    ['Digital Policy Project',   '--c3', 0, 5],
+    ['Coaching Courses review',  '--c2', 5, 9],
+    ['Reporting Portal',         '--c1', 8, 11],
+    ['ACP 18 Vol 1 (ongoing)',   '--c1', null, null]
+  ];
+  var host = document.getElementById('demo');
+
+  var head = document.createElement('div');
+  head.className = 'rm-head';
+  head.appendChild(document.createElement('span'));
+  var mrow = document.createElement('div');
+  mrow.className = 'rm-months';
+  months.forEach(function(m){
+    var s = document.createElement('span'); s.textContent = m; mrow.appendChild(s);
+  });
+  head.appendChild(mrow);
+  host.appendChild(head);
+
+  demo.forEach(function(d){
+    var row = document.createElement('div');
+    row.className = 'rm-row';
+    var name = document.createElement('span');
+    name.textContent = d[0];
+    var track = document.createElement('div');
+    track.className = 'track';
+    var bar = document.createElement('div');
+    var ongoing = d[2] === null;
+    bar.className = 'bar' + (ongoing ? ' ongoing' : '');
+    bar.style.setProperty('--c', 'var(' + d[1] + ')');
+    bar.style.left = ongoing ? '0%' : (d[2] / 12 * 100) + '%';
+    bar.style.width = ongoing ? '100%' : ((d[3] - d[2] + 1) / 12 * 100) + '%';
+    track.appendChild(bar);
+    row.appendChild(name);
+    row.appendChild(track);
+    host.appendChild(row);
+  });
+
+  document.getElementById('ts').textContent = new Date().toLocaleString('en-GB');
+})();
+</script>
+</body>
+</html>
